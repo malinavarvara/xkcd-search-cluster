@@ -1,5 +1,7 @@
 package core
 
+import "time"
+
 type ServiceStatus string
 
 const (
@@ -19,13 +21,20 @@ type ServiceStats struct {
 }
 
 type Comics struct {
-	ID    int
-	URL   string
-	Words []string
+	Num         int
+	ImgURL      string
+	PublishedAt time.Time
+	Words       []string
 }
 
 type XKCDInfo struct {
 	ID          int
 	URL         string
+	Title       string
+	SafeTitle   string
+	Alt         string
 	Description string
+	Year        string
+	Month       string
+	Day         string
 }

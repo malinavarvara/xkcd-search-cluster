@@ -10,14 +10,27 @@ type Pinger interface {
 	Ping(context.Context) error
 }
 
-type Updater interface {
-	Update(context.Context) error
-	Stats(context.Context) (UpdateStats, error)
-	Status(context.Context) (UpdateStatus, error)
-	Drop(context.Context) error
+type Logger interface {
+	Info(msg string, args ...any)
+	Error(msg string, args ...any)
+	Debug(msg string, args ...any)
+}
+
+type UpdateClient interface {
+	Ping(ctx context.Context) error
+	Status(ctx context.Context) (UpdateStatus, error)
+	Stats(ctx context.Context) (UpdateStats, error)
+	Update(ctx context.Context) error
+	Drop(ctx context.Context) error
 }
 
 type Searcher interface {
-	Search(context.Context, string, int) ([]Comics, error)
-	SearchIndex(context.Context, string, int) ([]Comics, error)
+	Search(ctx context.Context, phrase string, limit int) ([]Comics, int, error)
+	ISearch(ctx context.Context, phrase string, limit int) ([]Comics, int, error)
+	BuildIndex(ctx context.Context) error
+}
+
+type Authenticator interface {
+	Login(name, password string) (string, error)
+	Verify(token string) error
 }

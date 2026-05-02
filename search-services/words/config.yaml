@@ -1,1 +1,1 @@
-words_address: localhost:80
+words_address: ":8080"
