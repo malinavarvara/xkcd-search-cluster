@@ -80,6 +80,7 @@ func testLogger() *slog.Logger {
 
 func TestUpdate_FullCoverage(t *testing.T) {
 	logger := testLogger()
+	ctx := context.Background() // общий контекст для всех подтестов
 
 	t.Run("Success_NewComics", func(t *testing.T) {
 		m := &mockDeps{
@@ -92,9 +93,9 @@ func TestUpdate_FullCoverage(t *testing.T) {
 			dbAddFunc:   func(Comics) error { return nil },
 			publishFunc: func() error { return nil },
 		}
-		svc, err := NewService(logger, m, m, m, 2, m)
+		svc, err := NewService(ctx, logger, m, m, m, 2, m)
 		require.NoError(t, err)
-		err = svc.Update(context.Background())
+		err = svc.Update(ctx)
 		assert.NoError(t, err)
 	})
 
@@ -103,20 +104,20 @@ func TestUpdate_FullCoverage(t *testing.T) {
 			lastIDFunc: func() (int, error) { return 1, nil },
 			dbIDsFunc:  func() ([]int, error) { return []int{1}, nil },
 		}
-		svc, err := NewService(logger, m, m, m, 1, m)
+		svc, err := NewService(ctx, logger, m, m, m, 2, m)
 		require.NoError(t, err)
-		err = svc.Update(context.Background())
+		err = svc.Update(ctx)
 		assert.NoError(t, err)
 	})
 
 	t.Run("Error_Paths_To_Green_Returns", func(t *testing.T) {
 		m := &mockDeps{lastIDFunc: func() (int, error) { return 0, fmt.Errorf("api fail") }}
-		svc, _ := NewService(logger, m, m, m, 1, m)
-		_ = svc.Update(context.Background())
+		svc, _ := NewService(ctx, logger, m, m, m, 1, m)
+		_ = svc.Update(ctx)
 
 		m.lastIDFunc = func() (int, error) { return 1, nil }
 		m.dbIDsFunc = func() ([]int, error) { return nil, fmt.Errorf("db fail") }
-		_ = svc.Update(context.Background())
+		_ = svc.Update(ctx)
 
 		m.dbIDsFunc = func() ([]int, error) { return []int{}, nil }
 		m.getFunc = func(id int) (XKCDInfo, error) {
@@ -124,13 +125,13 @@ func TestUpdate_FullCoverage(t *testing.T) {
 		}
 		m.normFunc = func(string) ([]string, error) { return []string{}, nil }
 		m.dbAddFunc = func(Comics) error { return nil }
-		_ = svc.Update(context.Background())
+		_ = svc.Update(ctx)
 
 		m.getFunc = func(id int) (XKCDInfo, error) {
 			return XKCDInfo{ID: id, Year: "2024", Month: "1", Day: "1"}, nil
 		}
 		m.publishFunc = func() error { return fmt.Errorf("pub fail") }
-		_ = svc.Update(context.Background())
+		_ = svc.Update(ctx)
 	})
 
 	t.Run("Stats_And_Status", func(t *testing.T) {
@@ -138,13 +139,13 @@ func TestUpdate_FullCoverage(t *testing.T) {
 			dbStatsFunc: func() (DBStats, error) { return DBStats{}, nil },
 			lastIDFunc:  func() (int, error) { return 100, nil },
 		}
-		svc, _ := NewService(logger, m, m, m, 1, m)
+		svc, _ := NewService(ctx, logger, m, m, m, 1, m)
 
-		_ = svc.Status(context.Background())
-		_, _ = svc.Stats(context.Background())
+		_ = svc.Status(ctx)
+		_, _ = svc.Stats(ctx)
 
 		m.dbStatsFunc = func() (DBStats, error) { return DBStats{}, fmt.Errorf("fail") }
-		_, _ = svc.Stats(context.Background())
+		_, _ = svc.Stats(ctx)
 	})
 
 	t.Run("Drop_Coverage", func(t *testing.T) {
@@ -152,20 +153,21 @@ func TestUpdate_FullCoverage(t *testing.T) {
 			dbDropFunc:  func() error { return nil },
 			publishFunc: func() error { return nil },
 		}
-		svc, _ := NewService(logger, m, m, m, 1, m)
-		_ = svc.Drop(context.Background())
+		svc, _ := NewService(ctx, logger, m, m, m, 1, m)
+		_ = svc.Drop(ctx)
 
 		m.dbDropFunc = func() error { return fmt.Errorf("fail") }
-		_ = svc.Drop(context.Background())
+		_ = svc.Drop(ctx)
 	})
 }
 
 func TestNewService_InvalidConcurrency(t *testing.T) {
 	logger := testLogger()
 	var m mockDeps
-	_, err := NewService(logger, &m, &m, &m, 0, &m)
+	ctx := context.Background()
+	_, err := NewService(ctx, logger, &m, &m, &m, 0, &m)
 	assert.Error(t, err)
-	_, err = NewService(logger, &m, &m, &m, -1, &m)
+	_, err = NewService(ctx, logger, &m, &m, &m, -1, &m)
 	assert.Error(t, err)
 }
 
@@ -182,7 +184,7 @@ func TestUpdate_AlreadyRunning(t *testing.T) {
 		normFunc:  func(string) ([]string, error) { return []string{}, nil },
 		dbAddFunc: func(Comics) error { return nil },
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 2, m)
 	require.NoError(t, err)
 
 	errCh := make(chan error, 1)
@@ -209,7 +211,7 @@ func TestUpdate_ContextCancelDuringProcessing(t *testing.T) {
 		normFunc:  func(string) ([]string, error) { return []string{}, nil },
 		dbAddFunc: func(Comics) error { return nil },
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 2, m)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -228,7 +230,7 @@ func TestUpdate_ProcessComicError(t *testing.T) {
 		normFunc:   func(string) ([]string, error) { return []string{}, nil },
 		dbAddFunc:  func(Comics) error { return nil },
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 2, m)
 	require.NoError(t, err)
 	err = svc.Update(context.Background())
 	assert.Error(t, err)
@@ -240,7 +242,7 @@ func TestStats_LastIDError(t *testing.T) {
 		dbStatsFunc: func() (DBStats, error) { return DBStats{WordsTotal: 100}, nil },
 		lastIDFunc:  func() (int, error) { return 0, fmt.Errorf("api down") },
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 1, m)
 	require.NoError(t, err)
 
 	stats, err := svc.Stats(context.Background())
@@ -261,7 +263,7 @@ func TestStatus_Running(t *testing.T) {
 		normFunc:  func(string) ([]string, error) { return []string{}, nil },
 		dbAddFunc: func(Comics) error { return nil },
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 1, m)
 	require.NoError(t, err)
 
 	go func() { _ = svc.Update(context.Background()) }()
@@ -286,7 +288,7 @@ func TestDrop_PublishError(t *testing.T) {
 		dbDropFunc:  func() error { return nil },
 		publishFunc: func() error { return fmt.Errorf("nats error") },
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 1, m)
 	require.NoError(t, err)
 
 	err = svc.Drop(context.Background())
@@ -305,7 +307,7 @@ func TestProcessComic_NotFound(t *testing.T) {
 			return nil
 		},
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 1, m)
 	require.NoError(t, err)
 
 	err = svc.processComic(context.Background(), 42)
@@ -343,7 +345,7 @@ func TestProcessComic_PhraseTooLong(t *testing.T) {
 		},
 		dbAddFunc: func(Comics) error { return nil },
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 1, m)
 	require.NoError(t, err)
 
 	err = svc.processComic(context.Background(), 1)
@@ -361,7 +363,7 @@ func TestProcessComic_NormError(t *testing.T) {
 			return nil, fmt.Errorf("normalization service unavailable")
 		},
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 1, m)
 	require.NoError(t, err)
 
 	err = svc.processComic(context.Background(), 1)
@@ -380,7 +382,7 @@ func TestProcessComic_DBAddError(t *testing.T) {
 			return fmt.Errorf("database insert failed")
 		},
 	}
-	svc, err := NewService(logger, m, m, m, 1, m)
+	svc, err := NewService(context.Background(), logger, m, m, m, 1, m)
 	require.NoError(t, err)
 
 	err = svc.processComic(context.Background(), 1)

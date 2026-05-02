@@ -1,0 +1,6 @@
+log_level: "DEBUG"
+log_format: "text"
+address: ":8081"
+api_address: "http://api:8080"
+static_path: "/static"
+tmpl_path: "/templates/*.html"

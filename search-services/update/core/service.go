@@ -21,10 +21,11 @@ type Service struct {
 	concurrency int
 	isRunning   atomic.Bool
 	publisher   EventPublisher
+	appCtx      context.Context
 }
 
 func NewService(
-	log *slog.Logger, db DB, xkcd XKCD, words Words, concurrency int, publisher EventPublisher,
+	appCtx context.Context, log *slog.Logger, db DB, xkcd XKCD, words Words, concurrency int, publisher EventPublisher,
 ) (*Service, error) {
 	if concurrency < 1 {
 		return nil, fmt.Errorf("wrong concurrency specified: %d", concurrency)
@@ -36,16 +37,33 @@ func NewService(
 		words:       words,
 		concurrency: concurrency,
 		publisher:   publisher,
+		appCtx:      appCtx,
 	}, nil
 }
 
-func (s *Service) Update(ctx context.Context) (err error) {
+func (s *Service) Update(_ context.Context) error {
 	if s.isRunning.Swap(true) {
 		return ErrUpdateAlreadyRunning
 	}
 
-	defer s.isRunning.Store(false)
+	go func() {
+		defer s.isRunning.Store(false)
 
+		bgCtx, cancel := context.WithTimeout(s.appCtx, 30*time.Minute)
+		defer cancel()
+
+		s.log.Info("background update process started")
+		if err := s.doUpdate(bgCtx); err != nil {
+			s.log.Error("background update failed", "error", err)
+			return
+		}
+		s.log.Info("background update finished successfully")
+	}()
+
+	return nil
+}
+
+func (s *Service) doUpdate(ctx context.Context) error {
 	total, err := s.xkcd.LastID(ctx)
 	if err != nil {
 		return fmt.Errorf("get total comics: %w", err)
@@ -55,6 +73,7 @@ func (s *Service) Update(ctx context.Context) (err error) {
 	if err != nil {
 		return fmt.Errorf("get existing ids: %w", err)
 	}
+
 	existingMap := make(map[int]struct{}, len(existingNums))
 	for _, num := range existingNums {
 		existingMap[num] = struct{}{}
@@ -72,7 +91,7 @@ func (s *Service) Update(ctx context.Context) (err error) {
 		return nil
 	}
 
-	s.log.Info("starting update", "total_new", len(numsToFetch))
+	s.log.Info("fetching new comics", "count", len(numsToFetch))
 
 	g, gCtx := errgroup.WithContext(ctx)
 	g.SetLimit(s.concurrency)
@@ -94,17 +113,16 @@ func (s *Service) Update(ctx context.Context) (err error) {
 
 	if err := g.Wait(); err != nil {
 		if errors.Is(err, context.Canceled) {
-			s.log.Warn("update interrupted by user")
+			s.log.Warn("update interrupted by application shutdown")
 			return err
 		}
-		return fmt.Errorf("update failed: %w", err)
+		return fmt.Errorf("errgroup wait: %w", err)
 	}
 
 	if err := s.publisher.PublishUpdate(ctx); err != nil {
 		s.log.Error("failed to publish update event", "error", err)
 	}
 
-	s.log.Info("update finished successfully")
 	return nil
 }
 

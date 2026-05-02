@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -67,10 +68,33 @@ func run(cfg *config.Config, log *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	updater, err := core.NewService(log, storage, xkcd, words, cfg.XKCD.Concurrency, natsPublisher)
+	updater, err := core.NewService(ctx, log, storage, xkcd, words, cfg.XKCD.Concurrency, natsPublisher)
 	if err != nil {
 		return fmt.Errorf("failed create Update service: %v", err)
 	}
+
+	log.Info("triggering initial update on startup")
+	if err := updater.Update(ctx); err != nil {
+		log.Warn("initial update failed to start", "error", err)
+	}
+
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				log.Info("running scheduled 24h update")
+				if err := updater.Update(ctx); err != nil {
+					log.Warn("scheduled update failed to start", "error", err)
+				}
+			case <-ctx.Done():
+				log.Info("stopping scheduled update ticker")
+				return
+			}
+		}
+	}()
 
 	listener, err := net.Listen("tcp", cfg.Address)
 	if err != nil {
