@@ -124,3 +124,47 @@ footer {
     height: 200px; /* Фиксируем высоту для ровной сетки */
     object-fit: contain; /* Картинка не обрезается */
 }
+
+/* Контейнер модального окна */
+.modal {
+    display: none; /* Скрыто по умолчанию */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Полупрозрачный черный фон */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Контейнер для самой картинки */
+.modal-container {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.modal-container img {
+    width: 100%;
+    height: auto;
+    border: 5px solid white;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* Кнопка закрытия */
+.close-button {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: #bbb;
+}

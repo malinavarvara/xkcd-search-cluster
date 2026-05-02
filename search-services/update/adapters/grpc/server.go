@@ -44,7 +44,7 @@ func (s *Server) Update(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, 
 		if errors.Is(err, core.ErrUpdateAlreadyRunning) {
 			return nil, status.Error(codes.AlreadyExists, "update already running")
 		}
-		return nil, status.Errorf(codes.Internal, "failed to start update: %v", err)
+		return nil, status.Errorf(codes.Internal, "update failed: %v", err)
 	}
 	return &emptypb.Empty{}, nil
 }

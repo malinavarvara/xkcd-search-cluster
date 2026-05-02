@@ -15,7 +15,6 @@ type Handler struct {
 }
 
 func NewHandler(s *core.WebService, tmplPath string, staticPath string) *Handler {
-	// Предварительная загрузка шаблонов[cite: 6]
 	t := template.Must(template.ParseGlob(tmplPath))
 	return &Handler{
 		service:    s,
@@ -24,15 +23,12 @@ func NewHandler(s *core.WebService, tmplPath string, staticPath string) *Handler
 	}
 }
 
-// Mux настраивает маршруты для веб-интерфейса
 func (h *Handler) Mux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	// Раздача статики (CSS, JS)
 	fileServer := http.FileServer(http.Dir(h.staticPath))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
 
-	// Основные страницы
 	mux.HandleFunc("/", h.handleIndex)
 	mux.HandleFunc("/search", h.handleSearch)
 

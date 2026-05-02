@@ -126,23 +126,16 @@ func NewStatsHandler(log core.Logger, updateClient core.UpdateClient) http.Handl
 func NewUpdateHandler(log core.Logger, updateClient core.UpdateClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := updateClient.Update(r.Context())
-
-		w.Header().Set("Content-Type", "application/json")
-
 		if err != nil {
 			if errors.Is(err, core.ErrUpdateAlreadyRunning) {
-				w.WriteHeader(http.StatusAccepted) // 202
-				_, _ = w.Write([]byte(`{"status":"already updating"}`))
+				w.WriteHeader(http.StatusAccepted)
 				return
 			}
-
 			log.Error("failed to run update", "error", err)
-			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-
-		w.WriteHeader(http.StatusAccepted) // 202
-		_, _ = w.Write([]byte(`{"status":"update started"}`))
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

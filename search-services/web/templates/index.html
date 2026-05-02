@@ -51,12 +51,9 @@
             
             modal.style.display = "flex"; // Показываем окно
             modalImg.src = src;           // Устанавливаем источник картинки
-            document.body.style.overflow = "hidden"; // Блокируем прокрутку страницы
+            document.body.style.overflow = "hidden"; // Блокируем прокрутку фона
         }
 
-        /**
-         * Закрывает модальное окно
-         */
         function closeModal() {
             const modal = document.getElementById("comicModal");
             modal.style.display = "none";
