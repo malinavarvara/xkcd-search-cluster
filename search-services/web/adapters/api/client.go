@@ -17,7 +17,6 @@ func NewClient(addr string) *Client {
 }
 
 func (c *Client) Search(phrase string) ([]core.Comic, error) {
-	// Формируем URL к твоему API
 	url := fmt.Sprintf("%s/api/search?phrase=%s", c.addr, phrase)
 
 	resp, err := http.Get(url)
@@ -30,22 +29,25 @@ func (c *Client) Search(phrase string) ([]core.Comic, error) {
 		return nil, fmt.Errorf("api returned status: %d", resp.StatusCode)
 	}
 
-	// Парсим JSON-ответ, который возвращает SearchHandler[cite: 22]
+	// Возвращаем структуру-обертку, так как API присылает объект { "comics": [...] }
 	var data struct {
 		Comics []struct {
-			ID  int    `json:"id"`
-			URL string `json:"url"`
+			ID     int    `json:"id"`  // Проверь, присылает ли API "num" или "id"
+			ImgURL string `json:"url"` // Проверь, присылает ли API "img_url" или "url"
 		} `json:"comics"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode api response: %w", err)
 	}
 
-	// Мапим во внутреннюю модель
+	// Мапим данные в слайс доменных моделей
 	result := make([]core.Comic, len(data.Comics))
-	for i, c := range data.Comics {
-		result[i] = core.Comic{ID: c.ID, ImgURL: c.URL}
+	for i, item := range data.Comics {
+		result[i] = core.Comic{
+			ID:     item.ID,
+			ImgURL: item.ImgURL,
+		}
 	}
 	return result, nil
 }
