@@ -4,25 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XKCD Search</title>
-    <!-- Подключаем стили -->
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <!-- Блок заголовка и поиска -->
     <div class="search-container">
         <h1>XKCD Search</h1>
         <form action="/search" method="GET">
-            <!-- Поле ввода сохраняет текст запроса из .Query -->
             <input type="text" name="search" placeholder="Enter phrase..." value="{{.Query}}">
             <button type="submit">Search</button>
         </form>
     </div>
 
-    <!-- Основная сетка результатов -->
     <div class="comics-grid">
     {{range .Comics}}
     <div class="comic-card" onclick="openModal('{{.ImgURL}}')">
-        <!-- Мы используем .ID, потому что так называется поле в core.Comic[cite: 12] -->
         <img src="{{.ImgURL}}" alt="Comic #{{.ID}}" loading="lazy">
         <div class="comic-num">#{{.ID}}</div> 
     </div>
@@ -31,36 +26,29 @@
     {{end}}
 </div>
 
-    <!-- Модальное окно (скрыто по умолчанию) -->
-    <div id="comicModal" class="modal" onclick="closeModal()">
+   <div id="comicModal" class="modal" onclick="closeModal()">
         <div class="modal-container">
-            <span class="close-button">&times;</span>
-            <img id="modalImg" src="" alt="Full size comic">
+           <span class="close-button">&times;</span>
+           <img id="modalImg" src="" alt="Comic large view">
         </div>
     </div>
 
-    <!-- JavaScript для управления модалкой -->
     <script>
-        /**
-         * Открывает модальное окно с выбранным изображением
-         * @param {string} src - URL картинки комикса
-         */
         function openModal(src) {
             const modal = document.getElementById("comicModal");
             const modalImg = document.getElementById("modalImg");
             
-            modal.style.display = "flex"; // Показываем окно
-            modalImg.src = src;           // Устанавливаем источник картинки
-            document.body.style.overflow = "hidden"; // Блокируем прокрутку фона
+            modal.style.display = "flex"; 
+            modalImg.src = src;
+            document.body.style.overflow = "hidden";
         }
 
         function closeModal() {
             const modal = document.getElementById("comicModal");
             modal.style.display = "none";
-            document.body.style.overflow = "auto"; // Возвращаем прокрутку
+            document.body.style.overflow = "auto";
         }
 
-        // Закрытие окна при нажатии клавиши Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
                 closeModal();

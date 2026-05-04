@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления XKCD</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="search-container">
+        <h1>Admin Panel</h1>
+
+        <div id="authBlock">
+            <h2>Authentication Required</h2>
+            <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                <input type="text" id="username" placeholder="Login (admin)">
+                <input type="password" id="password" placeholder="Password">
+                <button onclick="login()">Login</button>
+            </div>
+        </div>
+
+        <div id="adminPanel" style="display:none; margin: 0 auto; max-width: 500px;" class="comic-card">
+            <h2>Service Management</h2>
+            <div class="error-message" style="color: black; border-color: black; margin-bottom: 20px;">
+                <p>Status: <strong id="statusValue" style="text-transform: uppercase;">Loading...</strong></p>
+                <p>Comics in Database: <strong id="dbCount">0</strong></p>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+                <button id="updateBtn" onclick="runUpdate()">Update DB</button>
+                <button id="dropBtn" onclick="runDrop()" style="border-color: #ff0000; color: #ff0000;">Drop DB</button>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>XKCD Admin Interface • 2026</p>
+    </footer>
+
+    <script src="/static/admin.js"></script>
+</body>
+</html>

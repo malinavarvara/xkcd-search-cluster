@@ -1,24 +1,18 @@
 package core
 
-// Comic описывает доменную сущность комикса, которая используется
-// во всей логике веб-интерфейса.
 type Comic struct {
-	ID     int    `json:"id"`    // Уникальный номер комикса
-	Title  string `json:"title"` // Заголовок или подпись
-	ImgURL string `json:"img"`   // Прямая ссылка на изображение для тега <img>[cite: 3, 6]
+	ID     int    //`json:"id"`
+	Title  string //`json:"title"`
+	ImgURL string //`json:"img"`
 }
 
-// SearchResponse может понадобиться, если ваш API возвращает
-// дополнительные метаданные (например, общее количество найденных элементов).[cite: 3]
 type SearchResponse struct {
-	Items []Comic `json:"items"`
+	Items []Comic //`json:"items"`
 }
 
-// PageData описывает структуру данных, которую мы передаем
-// в HTML-шаблоны для рендеринга страницы.[cite: 6]
 type PageData struct {
-	Comics  []Comic // Список найденных комиксов для отображения[cite: 6]
-	Query   string  // Текст поискового запроса для отображения в строке поиска[cite: 6]
-	Error   string  // Сообщение об ошибке, если поиск не удался
-	IsAdmin bool    // Флаг для отображения элементов управления админкой
+	Comics  []Comic
+	Query   string
+	Error   string
+	IsAdmin bool
 }

@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"encoding/json"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -12,14 +13,16 @@ type Handler struct {
 	service    *core.WebService
 	tmpls      *template.Template
 	staticPath string
+	apiAddress string
 }
 
-func NewHandler(s *core.WebService, tmplPath string, staticPath string) *Handler {
+func NewHandler(s *core.WebService, tmplPath string, staticPath string, apiAddress string) *Handler {
 	t := template.Must(template.ParseGlob(tmplPath))
 	return &Handler{
 		service:    s,
 		tmpls:      t,
 		staticPath: staticPath,
+		apiAddress: apiAddress,
 	}
 }
 
@@ -28,6 +31,14 @@ func (h *Handler) Mux() *http.ServeMux {
 
 	fileServer := http.FileServer(http.Dir(h.staticPath))
 	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
+
+	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "/templates/admin.html")
+	})
+	mux.HandleFunc("GET /api/config", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"api_url": h.apiAddress})
+	})
 
 	mux.HandleFunc("/", h.handleIndex)
 	mux.HandleFunc("/search", h.handleSearch)

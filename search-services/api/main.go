@@ -110,10 +110,12 @@ func run() error {
 		metrics.WritePrometheus(w, true)
 	})
 
+	handlerWithCORS := middleware.CORS(mux)
+
 	server := &http.Server{
 		Addr:        cfg.APIServer.Address,
 		ReadTimeout: cfg.APIServer.Timeout,
-		Handler:     mux,
+		Handler:     handlerWithCORS,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
