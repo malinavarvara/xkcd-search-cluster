@@ -1,0 +1,208 @@
+/* Основные настройки страницы */
+body {
+    font-family: "Comic Sans MS", "Courier New", Courier, monospace;
+    background-color: #ffffff;
+    color: #000000;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Контейнер поиска */
+.search-container {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+input[type="text"] {
+    border: 2px solid #000;
+    padding: 10px;
+    font-size: 1.2rem;
+    width: 300px;
+    outline: none;
+}
+
+button {
+    font-family: "Comic Sans MS", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    
+    padding: 10px 20px;
+    border: 2px solid #000;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    border-radius: 4px; 
+}
+
+button:hover {
+    background-color: #000;
+    color: #fff;
+}
+
+.comics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.comic-card {
+    border: 3px solid #000; 
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.2s;
+    background-color: #fff;
+}
+
+.comic-card:hover {
+    transform: rotate(-1deg) scale(1.02);
+}
+
+.comic-card img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #eee;
+    margin-top: 10px;
+}
+
+.comic-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    display: block;
+}
+
+.error-message {
+    color: #ff0000;
+    border: 2px dashed #ff0000;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+footer {
+    margin-top: 50px;
+    font-size: 0.8rem;
+    border-top: 1px solid #000;
+    padding-top: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+.comics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+}
+
+.comic-card {
+    border: 2px solid #000;
+    padding: 10px;
+    cursor: pointer;
+    background: #fff;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.comic-card:hover {
+    transform: scale(1.03);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.comic-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+}
+
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); 
+    justify-content: center;
+    align-items: center;
+}
+
+/* Контейнер для самой картинки */
+.modal-container {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.modal-container img {
+    max-width: 95vw;  
+    max-height: 90vh;  
+    width: auto;
+    height: auto;
+    object-fit: contain; 
+    border: 4px solid white;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* Кнопка закрытия */
+.close-button {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: #bbb;
+}
+
+#adminPanel button {
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+}
+
+#updateBtn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#authBlock input[type="password"] {
+    border: 2px solid #000;
+    padding: 10px;
+    font-size: 1.2rem;
+    width: 300px;
+    outline: none;
+    font-family: inherit;
+}
+
+#adminPanel h2 {
+    margin-top: 0;
+}
+
+#adminPanel button[style*="color: #ff0000"]:hover {
+    background-color: #ff0000;
+    color: #fff !important;
+}
+
+#updateBtn:disabled {
+    background-color: #eee;
+    color: #888;
+    border-color: #888;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}

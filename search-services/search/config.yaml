@@ -1,0 +1,8 @@
+address: ":8080"
+db_address: "postgres://postgres:password@postgres:5432/postgres?sslmode=disable"
+words_address: "words:8080"
+log_level: "DEBUG"
+log_format: "text"
+broker_address: "nats://nats:4222"
+index_rebuild_interval: "1h"
+index_ttl: "24h"

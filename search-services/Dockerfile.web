@@ -1,0 +1,26 @@
+FROM golang:1.25-alpine AS build
+
+WORKDIR /src
+# Загружаем зависимости
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копируем весь проект
+COPY . .
+
+# Собираем сервис
+RUN CGO_ENABLED=0 go build -o /web-server web/main.go
+
+FROM alpine:3.20
+
+# Копируем только бинарник и статические файлы в корень
+COPY --from=build /web-server /web-server
+COPY --from=build /src/web/templates /templates
+COPY --from=build /src/web/templates/static /static
+
+# Указываем переменные для приложения (совпадают с путями выше)
+ENV TMPL_PATH="/templates/*.html"
+ENV STATIC_PATH="/static"
+
+EXPOSE 8081
+ENTRYPOINT [ "/web-server" ]

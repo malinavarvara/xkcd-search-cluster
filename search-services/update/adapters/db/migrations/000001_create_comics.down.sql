@@ -1,1 +1,3 @@
-;
+DROP TABLE IF EXISTS comic_words;
+DROP TABLE IF EXISTS words;
+DROP TABLE IF EXISTS comics;

@@ -6,41 +6,64 @@ import (
 	"log/slog"
 	"os"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
-const secretKey = "something secret here" // token sign key
-const adminRole = "superuser"             // token subject
-
-// Authentication, Authorization, Accounting
 type AAA struct {
 	users    map[string]string
 	tokenTTL time.Duration
 	log      *slog.Logger
+	secret   []byte
 }
 
-func New(tokenTTL time.Duration, log *slog.Logger) (AAA, error) {
-	const adminUser = "ADMIN_USER"
-	const adminPass = "ADMIN_PASSWORD"
-	user, ok := os.LookupEnv(adminUser)
-	if !ok {
-		return AAA{}, fmt.Errorf("could not get admin user from enviroment")
+func New(tokenTTL time.Duration, log *slog.Logger) (*AAA, error) {
+	user := os.Getenv("ADMIN_USER")
+	password := os.Getenv("ADMIN_PASSWORD")
+	if user == "" || password == "" {
+		return nil, errors.New("ADMIN_USER and ADMIN_PASSWORD must be set")
 	}
-	password, ok := os.LookupEnv(adminPass)
-	if !ok {
-		return AAA{}, fmt.Errorf("could not get admin password from enviroment")
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		log.Warn("JWT_SECRET not set, using default (insecure for production)")
+		secret = "default-insecure-secret"
 	}
-
-	return AAA{
+	return &AAA{
 		users:    map[string]string{user: password},
 		tokenTTL: tokenTTL,
 		log:      log,
+		secret:   []byte(secret),
 	}, nil
 }
 
-func (a AAA) Login(name, password string) (string, error) {
-	return "", errors.New("implement me")
+func (a *AAA) Login(name, password string) (string, error) {
+	expectedPass, exists := a.users[name]
+	if !exists || expectedPass != password {
+		return "", errors.New("invalid credentials")
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": "superuser",
+		"exp": time.Now().Add(a.tokenTTL).Unix(),
+	})
+	return token.SignedString(a.secret)
 }
 
-func (a AAA) Verify(tokenString string) error {
-	return errors.New("implement me")
+func (a *AAA) Verify(tokenString string) error {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return a.secret, nil
+	})
+	if err != nil {
+		return err
+	}
+	if !token.Valid {
+		return errors.New("invalid token")
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims["sub"] != "superuser" {
+		return errors.New("not a superuser token")
+	}
+	return nil
 }

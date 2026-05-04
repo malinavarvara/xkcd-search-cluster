@@ -22,9 +22,12 @@ services:
       - SEARCH_CONCURRENCY=10
       - SEARCH_RATE=100
     depends_on:
-      - words
-      - update
-      - search
+      words:
+        condition: service_started
+      update:
+        condition: service_started
+      search:
+        condition: service_started
 
   words:
     image: words:latest
@@ -65,6 +68,50 @@ services:
         condition: service_started
       nats:
         condition: service_started
+
+  search:
+    build:
+      context: search-services
+      dockerfile: Dockerfile.search
+    ports:
+      - "28083:8080"
+    volumes:
+      - ./search-services/search/config.yaml:/config.yaml
+    image: search:latest
+    container_name: search
+    restart: unless-stopped
+    environment:
+      - SEARCH_ADDRESS=:8080
+      - DB_ADDRESS=postgres://postgres:password@postgres:5432/postgres?sslmode=disable
+      - WORDS_ADDRESS=words:8080
+      - BROKER_ADDRESS=nats://nats:4222
+      - INDEX_TTL=24h
+      - INDEX_REBUILD_INTERVAL=1h
+    depends_on:
+      postgres:
+        condition: service_healthy
+      words:
+        condition: service_started
+      nats:
+        condition: service_started
+
+  web:
+      image: web:latest
+      build:
+        context: search-services
+        dockerfile: Dockerfile.web
+      container_name: web
+      restart: unless-stopped
+      ports:
+        - "8081:8081"
+      environment:
+        - WEB_ADDRESS=:8081
+        - API_ADDRESS=http://api:8080
+        - TMPL_PATH=/templates/*.html  # Убираем ./web/ и ведем в корень контейнера
+        - STATIC_PATH=/static
+      depends_on:
+        api:
+          condition: service_started
 
   tests:
     image: tests:latest
@@ -107,6 +154,7 @@ services:
 
   nats:
     image: nats
+    container_name: nats
     ports:
       - "4222:4222"
 

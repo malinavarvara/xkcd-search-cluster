@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XKCD Search</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="search-container">
+        <h1>XKCD Search</h1>
+        <form action="/search" method="GET">
+            <input type="text" name="search" placeholder="Enter phrase..." value="{{.Query}}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="comics-grid">
+    {{range .Comics}}
+    <div class="comic-card" onclick="openModal('{{.ImgURL}}')">
+        <img src="{{.ImgURL}}" alt="Comic #{{.ID}}" loading="lazy">
+        <div class="comic-num">#{{.ID}}</div> 
+    </div>
+    {{else}}
+        <p>No comics found. Try another search term!</p>
+    {{end}}
+</div>
+
+   <div id="comicModal" class="modal" onclick="closeModal()">
+        <div class="modal-container">
+           <span class="close-button">&times;</span>
+           <img id="modalImg" src="" alt="Comic large view">
+        </div>
+    </div>
+
+    <script>
+        function openModal(src) {
+            const modal = document.getElementById("comicModal");
+            const modalImg = document.getElementById("modalImg");
+            
+            modal.style.display = "flex"; 
+            modalImg.src = src;
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("comicModal");
+            modal.style.display = "none";
+            document.body.style.overflow = "auto";
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
