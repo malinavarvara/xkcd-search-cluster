@@ -35,9 +35,13 @@ func (h *Handler) Mux() *http.ServeMux {
 	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "/templates/admin.html")
 	})
+
 	mux.HandleFunc("GET /api/config", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"api_url": h.apiAddress})
+		if err := json.NewEncoder(w).Encode(map[string]string{"api_url": h.apiAddress}); err != nil {
+			slog.Error("failed to encode api config", "error", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
 	})
 
 	mux.HandleFunc("/", h.handleIndex)

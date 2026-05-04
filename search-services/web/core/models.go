@@ -1,13 +1,13 @@
 package core
 
 type Comic struct {
-	ID     int    //`json:"id"`
-	Title  string //`json:"title"`
-	ImgURL string //`json:"img"`
+	ID     int
+	Title  string
+	ImgURL string
 }
 
 type SearchResponse struct {
-	Items []Comic //`json:"items"`
+	Items []Comic
 }
 
 type PageData struct {
